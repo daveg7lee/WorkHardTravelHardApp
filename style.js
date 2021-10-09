@@ -12,10 +12,6 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 100,
   },
-  btnText: {
-    fontSize: 28,
-    fontWeight: '500',
-  },
   input: {
     backgroundColor: theme.white,
     paddingVertical: 8,

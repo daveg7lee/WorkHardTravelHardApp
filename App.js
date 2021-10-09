@@ -11,6 +11,7 @@ import {
   View,
   Dimensions,
   Alert,
+  Platform,
 } from 'react-native';
 import { theme } from './color';
 import { styles } from './style';
@@ -97,10 +98,15 @@ export default function App() {
   };
 
   const onDeletePress = (id) => {
-    Alert.alert('Delete To Do', 'Are you sure?', [
-      { text: 'Cancel', style: 'destructive' },
-      { text: "I'm sure", onPress: () => deleteToDo(id) },
-    ]);
+    if (Platform.OS === 'web') {
+      const ok = confirm('Do you want to delete this To Do?');
+      ok && deleteToDo(id);
+    } else {
+      Alert.alert('Delete To Do', 'Are you sure?', [
+        { text: 'Cancel', style: 'destructive' },
+        { text: "I'm sure", onPress: () => deleteToDo(id) },
+      ]);
+    }
   };
 
   const onLongPress = (id) => {
@@ -132,7 +138,8 @@ export default function App() {
         <TouchableOpacity onPress={work}>
           <Text
             style={{
-              ...styles.btnText,
+              fontSize: 28,
+              fontWeight: '500',
               color: working ? theme.white : theme.grey,
             }}
           >
@@ -142,7 +149,8 @@ export default function App() {
         <TouchableOpacity onPress={travel}>
           <Text
             style={{
-              ...styles.btnText,
+              fontSize: 28,
+              fontWeight: '500',
               color: working ? theme.grey : theme.white,
             }}
           >
@@ -192,7 +200,12 @@ export default function App() {
                     <TouchableOpacity onLongPress={() => onLongPress(id)}>
                       {toDos[id].updating ? (
                         <TextInput
-                          style={{ ...styles.toDoText, color: theme.inputGrey }}
+                          style={{
+                            fontSize: 16,
+                            fontWeight: '500',
+                            marginLeft: 15,
+                            color: theme.inputGrey,
+                          }}
                           value={updateText}
                           onChangeText={onChangeUpdateText}
                           returnKeyType="done"
@@ -201,7 +214,9 @@ export default function App() {
                       ) : (
                         <Text
                           style={{
-                            ...styles.toDoText,
+                            fontSize: 16,
+                            fontWeight: '500',
+                            marginLeft: 15,
                             textDecorationLine: toDos[id].done
                               ? 'line-through'
                               : 'none',
