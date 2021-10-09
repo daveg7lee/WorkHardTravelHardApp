@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -10,6 +11,8 @@ import {
 import { theme } from './color';
 import { styles } from './style';
 
+const STORAGE_KEY = '@toDos';
+
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState('');
@@ -19,12 +22,26 @@ export default function App() {
   const work = () => setWorking(true);
   const onChangeText = (value) => setText(value);
 
-  const addToDo = () => {
+  useEffect(() => {
+    loadToDos();
+  }, []);
+
+  const saveToDos = async (value) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  };
+
+  const loadToDos = async () => {
+    const value = await AsyncStorage.getItem(STORAGE_KEY);
+    setToDos(JSON.parse(value));
+  };
+
+  const addToDo = async () => {
     if (text === '') {
       return;
     }
-    const newToDos = { ...toDos, [Date.now()]: { text, work: working } };
+    const newToDos = { ...toDos, [Date.now()]: { text, working } };
     setToDos(newToDos);
+    await saveToDos(newToDos);
     setText('');
   };
 
@@ -63,7 +80,7 @@ export default function App() {
       />
       <ScrollView>
         {Object.keys(toDos).map((key) => {
-          if (toDos[key].work === working) {
+          if (toDos[key].working === working) {
             return (
               <View key={key} style={styles.toDo}>
                 <Text style={styles.toDoText}>{toDos[key].text}</Text>
