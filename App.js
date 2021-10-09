@@ -58,8 +58,12 @@ export default function App() {
     try {
       const toDosValue = await AsyncStorage.getItem(TODOS);
       const workingValue = await AsyncStorage.getItem(WORKING);
-      setToDos(JSON.parse(toDosValue));
-      setWorking(JSON.parse(workingValue));
+      if (toDosValue) {
+        setToDos(JSON.parse(toDosValue));
+      }
+      if (workingValue) {
+        setWorking(JSON.parse(workingValue));
+      }
     } catch (e) {
       console.log(e);
     }
@@ -188,7 +192,7 @@ export default function App() {
                     <TouchableOpacity onLongPress={() => onLongPress(id)}>
                       {toDos[id].updating ? (
                         <TextInput
-                          style={{ ...styles.toDoText, color: theme.white }}
+                          style={{ ...styles.toDoText, color: theme.inputGrey }}
                           value={updateText}
                           onChangeText={onChangeUpdateText}
                           returnKeyType="done"
