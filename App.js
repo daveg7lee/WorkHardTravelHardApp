@@ -12,9 +12,22 @@ import { theme } from './color';
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState('');
+  const [toDos, setToDos] = useState({});
+
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (value) => setText(value);
+  const addToDo = () => {
+    if (text === '') {
+      return;
+    }
+    const newToDos = Object.assign({}, toDos, {
+      [Date.now()]: { text, work: working },
+    });
+    setToDos(newToDos);
+    setText('');
+  };
+  console.log(toDos);
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -41,6 +54,7 @@ export default function App() {
         </TouchableOpacity>
       </View>
       <TextInput
+        onSubmitEditing={addToDo}
         returnKeyType="done"
         onChangeText={onChangeText}
         value={text}
