@@ -37,6 +37,6 @@ export const styles = StyleSheet.create({
   toDoText: {
     fontSize: 16,
     fontWeight: '500',
-    color: theme.white,
+    marginLeft: 15,
   },
 });

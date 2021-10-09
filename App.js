@@ -15,33 +15,51 @@ import {
 import { theme } from './color';
 import { styles } from './style';
 
-const STORAGE_KEY = '@toDos';
+const TODOS = '@toDos';
+const WORKING = '@working';
 const height = Dimensions.get('screen').height;
 
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState('');
+  const [updateText, setUpdateText] = useState('');
   const [toDos, setToDos] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
+  const travel = () => {
+    setWorking(false);
+    saveWorking('false');
+  };
+
+  const work = () => {
+    setWorking(true);
+    saveWorking('true');
+  };
+
   const onChangeText = (value) => setText(value);
+
+  const onChangeUpdateText = (value) => setUpdateText(value);
 
   useEffect(() => {
     setLoading(true);
-    loadToDos();
+    load();
     setLoading(false);
   }, []);
 
   const saveToDos = async (value) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    await AsyncStorage.setItem(TODOS, JSON.stringify(value));
   };
 
-  const loadToDos = async () => {
+  const saveWorking = async (value) => {
+    await AsyncStorage.setItem(WORKING, value);
+  };
+
+  const load = async () => {
     try {
-      const value = await AsyncStorage.getItem(STORAGE_KEY);
-      setToDos(JSON.parse(value));
+      const toDosValue = await AsyncStorage.getItem(TODOS);
+      const workingValue = await AsyncStorage.getItem(WORKING);
+      setToDos(JSON.parse(toDosValue));
+      setWorking(JSON.parse(workingValue));
     } catch (e) {
       console.log(e);
     }
@@ -51,10 +69,20 @@ export default function App() {
     if (text === '') {
       return;
     }
-    const newToDos = { ...toDos, [Date.now()]: { text, working } };
+    const newToDos = {
+      ...toDos,
+      [Date.now()]: { text, working, done: false, updating: false },
+    };
     setToDos(newToDos);
     await saveToDos(newToDos);
     setText('');
+  };
+
+  const doneToDo = (id) => {
+    const newToDos = { ...toDos };
+    newToDos[id].done = !newToDos[id].done;
+    setToDos(newToDos);
+    saveToDos(newToDos);
   };
 
   const deleteToDo = async (id) => {
@@ -69,6 +97,28 @@ export default function App() {
       { text: 'Cancel', style: 'destructive' },
       { text: "I'm sure", onPress: () => deleteToDo(id) },
     ]);
+  };
+
+  const onLongPress = (id) => {
+    const newToDos = { ...toDos };
+    newToDos[id].updating = true;
+    setUpdateText(newToDos[id].text);
+    setToDos(newToDos);
+    saveToDos(newToDos);
+  };
+
+  const updateToDo = (id) => {
+    const newToDos = { ...toDos };
+    newToDos[id].updating = false;
+    newToDos[id].text = updateText;
+    setUpdateText('');
+    setToDos(newToDos);
+    saveToDos(newToDos);
+  };
+
+  const deleteAll = async () => {
+    setToDos({});
+    saveToDos({});
   };
 
   return (
@@ -119,7 +169,46 @@ export default function App() {
             if (toDos[id].working === working) {
               return (
                 <View key={id} style={styles.toDo}>
-                  <Text style={styles.toDoText}>{toDos[id].text}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => doneToDo(id)}>
+                      {toDos[id].done ? (
+                        <Fontisto
+                          name="checkbox-active"
+                          size={24}
+                          color={theme.grey}
+                        />
+                      ) : (
+                        <Fontisto
+                          name="checkbox-passive"
+                          size={24}
+                          color={theme.grey}
+                        />
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity onLongPress={() => onLongPress(id)}>
+                      {toDos[id].updating ? (
+                        <TextInput
+                          style={{ ...styles.toDoText, color: theme.white }}
+                          value={updateText}
+                          onChangeText={onChangeUpdateText}
+                          returnKeyType="done"
+                          onSubmitEditing={() => updateToDo(id)}
+                        />
+                      ) : (
+                        <Text
+                          style={{
+                            ...styles.toDoText,
+                            textDecorationLine: toDos[id].done
+                              ? 'line-through'
+                              : 'none',
+                            color: toDos[id].done ? theme.grey : theme.white,
+                          }}
+                        >
+                          {toDos[id].text}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                   <TouchableOpacity onPress={() => onDeletePress(id)}>
                     <Fontisto name="trash" size={16} color={theme.grey} />
                   </TouchableOpacity>
