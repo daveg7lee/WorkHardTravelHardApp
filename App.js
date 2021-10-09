@@ -1,29 +1,37 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
+import { Fontisto } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Dimensions,
+  Alert,
 } from 'react-native';
 import { theme } from './color';
 import { styles } from './style';
 
 const STORAGE_KEY = '@toDos';
+const height = Dimensions.get('screen').height;
 
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState('');
   const [toDos, setToDos] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (value) => setText(value);
 
   useEffect(() => {
+    setLoading(true);
     loadToDos();
+    setLoading(false);
   }, []);
 
   const saveToDos = async (value) => {
@@ -31,8 +39,12 @@ export default function App() {
   };
 
   const loadToDos = async () => {
-    const value = await AsyncStorage.getItem(STORAGE_KEY);
-    setToDos(JSON.parse(value));
+    try {
+      const value = await AsyncStorage.getItem(STORAGE_KEY);
+      setToDos(JSON.parse(value));
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const addToDo = async () => {
@@ -43,6 +55,20 @@ export default function App() {
     setToDos(newToDos);
     await saveToDos(newToDos);
     setText('');
+  };
+
+  const deleteToDo = async (id) => {
+    const newToDos = { ...toDos };
+    delete newToDos[id];
+    setToDos(newToDos);
+    saveToDos(newToDos);
+  };
+
+  const onDeletePress = (id) => {
+    Alert.alert('Delete To Do', 'Are you sure?', [
+      { text: 'Cancel', style: 'destructive' },
+      { text: "I'm sure", onPress: () => deleteToDo(id) },
+    ]);
   };
 
   return (
@@ -79,15 +105,29 @@ export default function App() {
         style={styles.input}
       />
       <ScrollView>
-        {Object.keys(toDos).map((key) => {
-          if (toDos[key].working === working) {
-            return (
-              <View key={key} style={styles.toDo}>
-                <Text style={styles.toDoText}>{toDos[key].text}</Text>
-              </View>
-            );
-          }
-        })}
+        {loading ? (
+          <View
+            style={{
+              height: height / 1.5,
+              justifyContent: 'center',
+            }}
+          >
+            <ActivityIndicator size={24} color="white" />
+          </View>
+        ) : (
+          Object.keys(toDos).map((id) => {
+            if (toDos[id].working === working) {
+              return (
+                <View key={id} style={styles.toDo}>
+                  <Text style={styles.toDoText}>{toDos[id].text}</Text>
+                  <TouchableOpacity onPress={() => onDeletePress(id)}>
+                    <Fontisto name="trash" size={16} color={theme.grey} />
+                  </TouchableOpacity>
+                </View>
+              );
+            }
+          })
+        )}
       </ScrollView>
     </View>
   );

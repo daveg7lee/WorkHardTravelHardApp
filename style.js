@@ -25,6 +25,9 @@ export const styles = StyleSheet.create({
     fontSize: 16,
   },
   toDo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: theme.toDoBg,
     marginBottom: 10,
     paddingVertical: 15,
